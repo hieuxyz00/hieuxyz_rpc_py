@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hieuxyz-rpc"
+version = "0.0.1"
+description = "A powerful Discord Rich Presence library for Python"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "ISC"
+authors = [
+  { name = "hieuxyz", email = "khongbt446@gmail.com" },
+]
+keywords = ["discord", "rpc", "rich-presence", "wrapper", "api"]
+dependencies = [
+    "aiohttp>=3.9.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/hieuxyz00/hieuxyz_rpc_py"
+"Bug Tracker" = "https://github.com/hieuxyz00/hieuxyz_rpc_py/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
