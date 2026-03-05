@@ -25,6 +25,7 @@ class HieuxyzRPC:
         self.application_id = '1416676323459469363'
         self.platform: DiscordPlatform = 'desktop'
         self.resolved_assets_cache: Dict[str, str] = {}
+        self.asset_message_ids: Dict[str, str] = {}
         self.MAX_CACHE_SIZE = 50
         self.application_assets_cache: Dict[str, Dict[str, str]] = {}
         self.renewal_task: Optional[asyncio.Task] = None
@@ -260,20 +261,26 @@ class HieuxyzRPC:
         expiry_time_ms = self._get_expiry_time(asset_key)
         if expiry_time_ms and expiry_time_ms < (time.time() * 1000) + 3600000:
             # logger.info(f"Asset {cache_key} is expiring soon. Renewing...")
-            parts = asset_key.split('mp:attachments/')
-            if len(parts) > 1:
-                asset_id = parts[1]
-                new_asset = await self.image_service.renew_image(asset_id)
+            message_id = self.asset_message_ids.get(cache_key)
+            parts = asset_key.split('/')
+            if message_id and len(parts) >= 4:
+                channel_id = parts[1]
+                filename = parts[-1].split('?')[0]
+                renew_id = f"{channel_id}/{message_id}/{filename}"
+                new_asset = await self.image_service.renew_image(renew_id)
                 if new_asset:
                     self.resolved_assets_cache[cache_key] = new_asset
                     return new_asset
+            else:
+                logger.warn(f"Cannot renew asset: Message ID missing for {cache_key}")
+                
             logger.warn("Failed to renew asset, will use the old one.")
         return asset_key
 
     def _start_background_renewal(self):
         async def renewal_loop():
             while True:
-                await asyncio.sleep(600) # 600000 ms
+                await asyncio.sleep(600)
                 # logger.info('Running background asset renewal check...')
                 for cache_key, asset_key in list(self.resolved_assets_cache.items()):
                     await self._renew_asset_if_needed(cache_key, asset_key)
@@ -324,13 +331,19 @@ class HieuxyzRPC:
         if cached_asset:
             return await self._renew_asset_if_needed(cache_key, cached_asset)
 
-        resolved_asset = await image.resolve(self.image_service)
-        if resolved_asset:
-            if resolved_asset.startswith('app_asset:'):
-                return await self._resolve_image(image)
+        result = await image.resolve(self.image_service)
+        if result and 'id' in result:
+            asset_id = result['id']
             
-            self.resolved_assets_cache[cache_key] = resolved_asset
-        return resolved_asset
+            if 'message_id' in result and result['message_id']:
+                self.asset_message_ids[cache_key] = result['message_id']
+
+            if asset_id.startswith('app_asset:'):
+                return await self._resolve_image(ApplicationImage(asset_id[10:]))
+            
+            self.resolved_assets_cache[cache_key] = asset_id
+            return asset_id
+        return None
 
     async def build_activity(self) -> Optional[Dict]:
         """
@@ -388,6 +401,7 @@ class HieuxyzRPC:
         """Manually clear the asset cache to free memory."""
         self.resolved_assets_cache.clear()
         self.application_assets_cache.clear()
+        self.asset_message_ids.clear()
         logger.info('RPC Asset cache has been cleared.')
 
     def destroy(self):

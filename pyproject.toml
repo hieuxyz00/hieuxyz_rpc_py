@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hieuxyz-rpc"
-version = "0.0.1"
+version = "0.0.2"
 description = "A powerful Discord Rich Presence library for Python"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = "ISC"
 authors = [
   { name = "hieuxyz", email = "khongbt446@gmail.com" },

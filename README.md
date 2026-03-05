@@ -5,7 +5,7 @@
 
 [![PyPI version](https://badge.fury.io/py/hieuxyz-rpc.svg)](https://badge.fury.io/py/hieuxyz-rpc)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 `hieuxyz-rpc` allows you to control the RPC status of a Discord **User Account** directly from Python. It supports advanced features like multi-RPC, client spoofing, custom assets, and buttons.
 
@@ -113,7 +113,7 @@ music_rpc.set_name("Spotify") \
          .set_application_id("12345678901234567") # Must use a different App ID
 
 # Send all activities
-await client.rpc.build() # Or client.send_all_activities() internally
+await client.rpc.build()
 ```
 
 ## API Reference
@@ -133,6 +133,7 @@ Builder class for Rich Presence. Methods are chainable.
 - `.set_name(str)`: Activity name.
 - `.set_details(str)`: Activity details.
 - `.set_state(str)`: Activity state.
+- `.set_status(str)`: Sets the user's presence status ('online' | 'dnd' | 'idle' | 'invisible' | 'offline').
 - `.set_type(int | str)`: 0/playing, 1/streaming, 2/listening, 3/watching, 5/competing.
 - `.set_timestamps(start, end)`: Unix timestamps in ms.
 - `.set_party(current, max, id)`: Set party size and ID.

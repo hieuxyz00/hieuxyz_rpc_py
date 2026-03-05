@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 from .image_service import ImageService
-from typing import Optional
+from typing import Optional, Dict
 
 class RpcImage(ABC):
     """
@@ -9,7 +9,7 @@ class RpcImage(ABC):
     """
     
     @abstractmethod
-    async def resolve(self, image_service: ImageService) -> Optional[str]:
+    async def resolve(self, image_service: ImageService) -> Optional[Dict[str, str]]:
         """
         Resolve the image into an asset key that Discord can understand.
         
@@ -17,7 +17,7 @@ class RpcImage(ABC):
             image_service (ImageService): An instance of ImageService to handle uploads or proxies.
             
         Returns:
-            Optional[str]: Asset key has been resolved.
+            Optional[Dict]: Asset key has been resolved.
         """
         pass
 
@@ -38,8 +38,9 @@ class DiscordImage(RpcImage):
     def __init__(self, image_key: str):
         self.image_key = image_key
 
-    async def resolve(self, image_service: ImageService) -> Optional[str]:
-        return self.image_key if self.image_key.startswith('mp:') else f"mp:{self.image_key}"
+    async def resolve(self, image_service: ImageService) -> Optional[Dict[str, str]]:
+        key = self.image_key if self.image_key.startswith('mp:') else f"mp:{self.image_key}"
+        return {'id': key}
 
     def get_cache_key(self) -> str:
         return f"discord:{self.image_key}"
@@ -51,7 +52,7 @@ class ExternalImage(RpcImage):
     def __init__(self, url: str):
         self.url = url
 
-    async def resolve(self, image_service: ImageService) -> Optional[str]:
+    async def resolve(self, image_service: ImageService) -> Optional[Dict[str, str]]:
         return await image_service.get_external_url(self.url)
 
     def get_cache_key(self) -> str:
@@ -66,7 +67,7 @@ class LocalImage(RpcImage):
         self.file_path = file_path
         self.file_name = file_name or os.path.basename(file_path)
 
-    async def resolve(self, image_service: ImageService) -> Optional[str]:
+    async def resolve(self, image_service: ImageService) -> Optional[Dict[str, str]]:
         return await image_service.upload_image(self.file_path, self.file_name)
 
     def get_cache_key(self) -> str:
@@ -80,8 +81,8 @@ class RawImage(RpcImage):
     def __init__(self, asset_key: str):
         self.asset_key = asset_key
 
-    async def resolve(self, image_service: ImageService) -> Optional[str]:
-        return self.asset_key
+    async def resolve(self, image_service: ImageService) -> Optional[Dict[str, str]]:
+        return {'id': self.asset_key}
 
     def get_cache_key(self) -> str:
         return f"raw:{self.asset_key}"
@@ -98,8 +99,8 @@ class ApplicationImage(RpcImage):
         """
         self.asset_name = asset_name
 
-    async def resolve(self, image_service: ImageService) -> Optional[str]:
-        return f"app_asset:{self.asset_name}"
+    async def resolve(self, image_service: ImageService) -> Optional[Dict[str, str]]:
+        return {'id': f"app_asset:{self.asset_name}"}
 
     def get_cache_key(self) -> str:
         return f"app_asset:{self.asset_name}"
