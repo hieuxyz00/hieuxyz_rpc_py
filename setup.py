@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="hieuxyz-rpc",
-    version="0.0.2",
+    version="0.0.3",
     author="hieuxyz",
     author_email="khongbt446@gmail.com",
     description="A powerful Discord Rich Presence library for Python",

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hieuxyz-rpc"
-version = "0.0.2"
+version = "0.0.3"
 description = "A powerful Discord Rich Presence library for Python"
 readme = "README.md"
 requires-python = ">=3.11"

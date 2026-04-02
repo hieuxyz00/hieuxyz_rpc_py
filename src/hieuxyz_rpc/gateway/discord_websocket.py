@@ -49,6 +49,10 @@ class DiscordWebSocket:
     def _is_token_valid(self, token: str) -> bool:
         return len(token.split('.')) >= 3
 
+    async def _force_teardown(self):
+        if self.session and not self.session.closed:
+            await self.session.close()
+
     async def connect(self):
         """
         Initiate connection to Discord Gateway.
@@ -68,7 +72,7 @@ class DiscordWebSocket:
         try:
             async def _connect_with_timeout():
                 try:
-                    self.ws = await self.session.ws_connect(url)
+                    self.ws = await self.session.ws_connect(url, heartbeat=30.0)
                     logger.info(f"Successfully connected to Discord Gateway at {url}.")
                     self.is_reconnecting = False
                 except Exception as e:
@@ -80,12 +84,11 @@ class DiscordWebSocket:
             self.listen_task = asyncio.create_task(self._listen())
         except asyncio.TimeoutError:
             logger.error('Connection timed out. Terminating connection attempt.')
-            if self.ws:
-                await self.ws.close()
-            await self.session.close()
+            await self._force_teardown()
         except Exception as e:
             if not self.is_reconnecting:
                  logger.error(f"Connection failed: {e}")
+            await self._force_teardown()
 
     async def _listen(self):
         """Listen for msg from WebSocket."""
@@ -213,7 +216,7 @@ class DiscordWebSocket:
                 
                 if not self.last_heartbeat_ack:
                     logger.warn('Heartbeat ACK missing. Connection is zombie. Terminating to resume...')
-                    if self.ws: await self.ws.close()
+                    await self._force_teardown()
                     break
                 
                 if not self.ws or self.ws.closed:
@@ -256,7 +259,10 @@ class DiscordWebSocket:
 
     async def _send_json(self, data: Dict):
         if self.ws and not self.ws.closed:
-            await self.ws.send_json(data)
+            try:
+                await self.ws.send_json(data)
+            except Exception:
+                await self._force_teardown()
         else:
             logger.warn('Attempted to send data while WebSocket was not open.')
 

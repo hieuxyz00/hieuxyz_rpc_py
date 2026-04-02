@@ -1,4 +1,4 @@
-__VERSION__ = "0.0.2"
+__VERSION__ = "0.0.3"
 __AUTHOR__ = "hieuxyz"
 from .client import Client, ClientOptions
 from .gateway.discord_websocket import DiscordWebSocket
